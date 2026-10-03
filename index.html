@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>돌봄 시간·급여 관리</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f6f7f9;--card:#fff;--tx:#1d2330;--sub:#7a8394;--pri:#3b6ef5;--pri2:#e8eefe;--line:#e6e9ef;--red:#e5484d;--t0:#3b6ef5;--t1:#f08a24}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151c;--card:#1c212b;--tx:#eef1f6;--sub:#8c95a6;--pri:#6b8fff;--pri2:#26304a;--line:#2a3140;--red:#ff6b70}}
+:root[data-theme="dark"]{--bg:#12151c;--card:#1c212b;--tx:#eef1f6;--sub:#8c95a6;--pri:#6b8fff;--pri2:#26304a;--line:#2a3140;--red:#ff6b70}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;max-width:520px;margin-inline:auto;padding:14px}
+.card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.nav b{font-size:18px}
+button{font:inherit;border:0;border-radius:10px;padding:10px 14px;background:var(--pri2);color:var(--pri);font-weight:600}
+button.p{background:var(--pri);color:#fff}
+button.d{background:transparent;color:var(--red);padding:4px 8px}
+.total{font-size:30px;font-weight:800;color:var(--pri);margin:2px 0 10px}
+.stats{display:flex;gap:8px}
+.stats div{flex:1;background:var(--bg);border-radius:10px;padding:8px 10px;font-size:12px;color:var(--sub)}
+.stats b{display:block;font-size:15px;color:var(--tx);margin-top:2px}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.dow{text-align:center;font-size:12px;color:var(--sub);padding:4px 0}
+.c{min-height:62px;border-radius:8px;background:var(--bg);padding:4px 3px;font-size:10px;text-align:center;cursor:pointer;border:1px solid transparent}
+.c .n{font-size:12px;font-weight:600;display:block;margin-bottom:2px}
+.c.on{background:var(--pri2);border-color:var(--pri)}
+.c.today .n{color:var(--pri)}
+.c .h{color:var(--pri);font-weight:700}
+.c .m{color:var(--sub)}
+.c.e{background:transparent;cursor:default}
+.sun{color:var(--red)}
+.wage{display:flex;align-items:center;gap:8px;font-size:14px}
+input{font:inherit;font-size:16px;color:var(--tx);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px;width:100%}
+.wage input{width:110px}
+#ov{position:fixed;inset:0;background:#0007;display:none;align-items:flex-end;justify-content:center;z-index:9}
+#ov.show{display:flex}
+#sh{background:var(--card);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:85%;overflow:auto}
+.row{display:flex;gap:8px;align-items:center;margin:8px 0}
+.row label{font-size:12px;color:var(--sub);flex:1}
+.rec{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.pre{display:flex;gap:6px;margin:8px 0}
+.pre button{flex:1;font-size:13px;padding:8px}
+.err{color:var(--red);font-size:13px;min-height:16px}
+.stats div small{display:block;font-weight:400;margin-top:1px}
+.dt{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.dots{display:block;height:8px;margin-top:2px}.dots i{display:inline-block;width:6px;height:6px;border-radius:50%;margin:0 1px}
+.seg{display:flex;gap:6px;margin-bottom:8px}.seg button{flex:1;background:var(--bg);color:var(--sub)}
+.seg button.a{color:#fff}
+.tset{display:flex;gap:8px;align-items:center;margin:8px 0;font-size:14px}.tset input:first-of-type{flex:1.4}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="nav"><button id="pv">‹</button><b id="ym"></b><button id="nx">›</button></div>
+  <div style="color:var(--sub);font-size:13px">이번 달 지급할 금액</div>
+  <div class="total" id="tot">0원</div>
+  <div class="stats" id="ts"></div>
+</div>
+<div class="card">
+  <div class="grid" id="g"></div>
+</div>
+<div class="card"><b style="font-size:14px">선생님 설정</b><div id="tset"></div></div>
+
+<div id="ov"><div id="sh">
+  <div class="nav"><b id="st"></b><button id="cl">닫기</button></div>
+  <div id="lst"></div>
+  <div class="seg" id="seg"></div>
+  <div class="pre"><button data-s="07:00" data-e="09:00">☀️ 아침 7–9</button><button data-s="18:00" data-e="20:00">🌙 저녁 6–8</button></div>
+  <div class="row"><label>출근<input type="text" id="fs" inputmode="numeric" maxlength="5" placeholder="예: 0700" value="07:00"></label><label>퇴근<input type="text" id="fe" inputmode="numeric" maxlength="5" placeholder="예: 0700" value="09:00"></label></div>
+  <div class="row"><label>시급(원)<input type="number" id="fw" inputmode="numeric" step="100"></label></div>
+  <div class="err" id="er"></div>
+  <button class="p" id="add" style="width:100%">추가</button>
+</div></div>
+
+<script>
+const K='sitter-v1',C=['var(--t0)','var(--t1)'];
+let D={recs:{},teachers:[{name:'선생님 A',wage:12000},{name:'선생님 B',wage:12000}]};
+try{const r=JSON.parse(localStorage.getItem(K)||'null');if(r){D.recs=r.recs||{};if(r.teachers)D.teachers=r.teachers;else if(r.wage)D.teachers.forEach(t=>t.wage=r.wage)}}catch(e){}
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(D))}catch(e){}};
+const $=id=>document.getElementById(id);
+const won=n=>Math.round(n).toLocaleString('ko-KR')+'원';
+const mins=r=>{const[a,b]=r.s.split(':'),[c,d]=r.e.split(':');return(+c*60+ +d)-(+a*60+ +b)};
+const pay=r=>mins(r)/60*r.w;
+const pad=n=>String(n).padStart(2,'0');
+const hh=m=>(Math.round(m/6)/10)+'h';
+const tn=i=>D.teachers[i].name||('선생님 '+(i?'B':'A'));
+let now=new Date(),Y=now.getFullYear(),M=now.getMonth(),sel=null,st=0;
+const key=d=>`${Y}-${pad(M+1)}-${pad(d)}`;
+
+function render(){
+  $('ym').textContent=`${Y}년 ${M+1}월`;
+  const g=$('g');g.innerHTML='';
+  '일월화수목금토'.split('').forEach((t,i)=>g.insertAdjacentHTML('beforeend',`<div class="dow ${i==0?'sun':''}">${t}</div>`));
+  const first=new Date(Y,M,1).getDay(),days=new Date(Y,M+1,0).getDate();
+  for(let i=0;i<first;i++)g.insertAdjacentHTML('beforeend','<div class="c e"></div>');
+  const T=[0,1].map(()=>({p:0,m:0,d:0}));
+  for(let d=1;d<=days;d++){
+    const rs=D.recs[key(d)]||[];
+    let m=0,p=0;const has=[0,0];
+    rs.forEach(r=>{const t=r.t||0;m+=mins(r);p+=pay(r);T[t].p+=pay(r);T[t].m+=mins(r);has[t]=1});
+    [0,1].forEach(t=>{if(has[t])T[t].d++});
+    const isT=d===now.getDate()&&M===now.getMonth()&&Y===now.getFullYear();
+    const el=document.createElement('div');
+    el.className='c'+(rs.length?' on':'')+(isT?' today':'');
+    el.innerHTML=`<span class="n">${d}</span>`+(rs.length?`<span class="h">${hh(m)}</span><br><span class="m">${Math.round(p/1000)}천</span><span class="dots">${has.map((h,i)=>h?`<i style="background:${C[i]}"></i>`:'').join('')}</span>`:'');
+    el.onclick=()=>openSheet(d);
+    g.appendChild(el);
+  }
+  $('tot').textContent=won(T[0].p+T[1].p);
+  $('ts').innerHTML=[0,1].map(i=>`<div><span class="dt" style="background:${C[i]}"></span>${tn(i)}<b>${won(T[i].p)}</b><small>${hh(T[i].m)} · ${T[i].d}일</small></div>`).join('');
+}
+function tset(){
+  $('tset').innerHTML=[0,1].map(i=>`<div class="tset"><span class="dt" style="background:${C[i]}"></span><input data-i="${i}" data-f="name" value="${D.teachers[i].name}" placeholder="이름"><input type="number" inputmode="numeric" step="100" data-i="${i}" data-f="wage" value="${D.teachers[i].wage}"><span>원/h</span></div>`).join('');
+  $('tset').querySelectorAll('input').forEach(inp=>inp.onchange=()=>{
+    const t=D.teachers[inp.dataset.i];
+    if(inp.dataset.f==='wage')t.wage=+inp.value||t.wage;else t.name=inp.value.trim();
+    save();render();
+  });
+}
+function seg(){
+  $('seg').innerHTML=[0,1].map(i=>`<button data-i="${i}" class="${st===i?'a':''}" style="${st===i?'background:'+C[i]:''}">${tn(i)}</button>`).join('');
+  $('seg').querySelectorAll('button').forEach(b=>b.onclick=()=>{st=+b.dataset.i;$('fw').value=D.teachers[st].wage;seg()});
+}
+function openSheet(d){
+  sel=d;$('st').textContent=`${M+1}월 ${d}일`;$('er').textContent='';
+  $('fw').value=D.teachers[st].wage;seg();list();$('ov').classList.add('show');
+}
+function list(){
+  const rs=D.recs[key(sel)]||[];
+  $('lst').innerHTML=rs.map((r,i)=>`<div class="rec"><span><span class="dt" style="background:${C[r.t||0]}"></span>${tn(r.t||0)}<br>${r.s} – ${r.e} · ${hh(mins(r))} · ${r.w.toLocaleString()}원/h<br><b>${won(pay(r))}</b></span><button class="d" data-i="${i}">삭제</button></div>`).join('')||'<div style="color:var(--sub);font-size:14px;padding:6px 0">기록이 없어요</div>';
+  $('lst').querySelectorAll('.d').forEach(b=>b.onclick=()=>{
+    rs.splice(+b.dataset.i,1);if(!rs.length)delete D.recs[key(sel)];save();list();render();
+  });
+}
+const nt=v=>{const d=String(v).replace(/\D/g,'');let h,m;
+  if(d.length===1||d.length===2){h=+d;m=0}else if(d.length===3){h=+d[0];m=+d.slice(1)}else if(d.length===4){h=+d.slice(0,2);m=+d.slice(2)}else return null;
+  return h<24&&m<60?pad(h)+':'+pad(m):null};
+['fs','fe'].forEach(i=>{$(i).onfocus=()=>$(i).select();$(i).onblur=()=>{const n=nt($(i).value);if(n)$(i).value=n}});
+document.querySelectorAll('.pre button').forEach(b=>b.onclick=()=>{$('fs').value=b.dataset.s;$('fe').value=b.dataset.e});
+$('add').onclick=()=>{
+  const r={t:st,s:nt($('fs').value),e:nt($('fe').value),w:+$('fw').value};
+  if(!r.s||!r.e||!r.w){$('er').textContent='시간은 0700처럼 숫자 4자리로, 시급도 입력해 주세요';return}
+  if(mins(r)<=0){$('er').textContent='퇴근 시간이 출근보다 늦어야 해요';return}
+  (D.recs[key(sel)]=D.recs[key(sel)]||[]).push(r);
+  D.teachers[st].wage=r.w;save();$('er').textContent='';tset();list();render();
+};
+$('cl').onclick=()=>$('ov').classList.remove('show');
+$('ov').onclick=e=>{if(e.target.id==='ov')$('ov').classList.remove('show')};
+$('pv').onclick=()=>{M--;if(M<0){M=11;Y--}render()};
+$('nx').onclick=()=>{M++;if(M>11){M=0;Y++}render()};
+tset();render();
+</script>
+</body>
+</html>
