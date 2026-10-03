@@ -77,7 +77,7 @@ input{font:inherit;font-size:16px;color:var(--tx);background:var(--bg);border:1p
 
 <script>
 const K='sitter-v1',C=['var(--t0)','var(--t1)'];
-let D={recs:{},teachers:[{name:'등원선생님',wage:12000},{name:'하원선생님',wage:12000}]};
+let D={recs:{},teachers:[{name:'등원선생님',wage:13000},{name:'하원선생님',wage:13000}]};
 try{const r=JSON.parse(localStorage.getItem(K)||'null');if(r){D.recs=r.recs||{};if(r.teachers)D.teachers=r.teachers;else if(r.wage)D.teachers.forEach(t=>t.wage=r.wage)}}catch(e){}
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(D))}catch(e){}};
 const $=id=>document.getElementById(id);
