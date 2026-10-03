@@ -68,7 +68,7 @@ input{font:inherit;font-size:16px;color:var(--tx);background:var(--bg);border:1p
   <div class="nav"><b id="st"></b><button id="cl">닫기</button></div>
   <div id="lst"></div>
   <div class="seg" id="seg"></div>
-  <div class="pre"><button data-s="07:00" data-e="09:00">☀️ 아침 7–9</button><button data-s="18:00" data-e="20:00">🌙 저녁 6–8</button></div>
+  <div class="pre"><button data-s="07:00" data-e="09:00">☀️ 아침 7–9</button><button data-s="17:00" data-e="19:00">🌙 저녁 5–7</button></div>
   <div class="row"><label>출근<input type="text" id="fs" inputmode="numeric" maxlength="5" placeholder="예: 0700" value="07:00"></label><label>퇴근<input type="text" id="fe" inputmode="numeric" maxlength="5" placeholder="예: 0700" value="09:00"></label></div>
   <div class="row"><label>시급(원)<input type="number" id="fw" inputmode="numeric" step="100"></label></div>
   <div class="err" id="er"></div>
@@ -77,7 +77,7 @@ input{font:inherit;font-size:16px;color:var(--tx);background:var(--bg);border:1p
 
 <script>
 const K='sitter-v1',C=['var(--t0)','var(--t1)'];
-let D={recs:{},teachers:[{name:'선생님 A',wage:12000},{name:'선생님 B',wage:12000}]};
+let D={recs:{},teachers:[{name:'등원선생님',wage:12000},{name:'하원선생님',wage:12000}]};
 try{const r=JSON.parse(localStorage.getItem(K)||'null');if(r){D.recs=r.recs||{};if(r.teachers)D.teachers=r.teachers;else if(r.wage)D.teachers.forEach(t=>t.wage=r.wage)}}catch(e){}
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(D))}catch(e){}};
 const $=id=>document.getElementById(id);
